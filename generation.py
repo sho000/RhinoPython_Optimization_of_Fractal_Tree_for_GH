@@ -79,6 +79,7 @@ class Branch(object):
         self.angleXZ = angleXZ
         self.angleXY = angleXY
         self.scale = scale
+        self.children = []
         
         self.sP = []
         self.eP = []
@@ -118,6 +119,94 @@ class Branch(object):
         guid = rs.AddCircle(plane,r)
         guid = rs.AddPlanarSrf(guid)[0]
         return guid
+    
+    def getSrfPts(self, axisNo):
+        pts = []
+        scaleW = 0.2
+        # pt0
+        vec = rs.VectorUnitize(self.axis.axises[axisNo])
+        vec = rs.VectorScale(vec, self.length*scaleW/2)
+        pt0 = rs.VectorAdd(self.sP, -vec)
+        pts.append(pt0)
+        # pt1
+        pt1 = rs.VectorAdd(self.sP, vec)
+        pts.append(pt1)
+        # pt2
+        vec = rs.VectorUnitize(self.axis.axises[axisNo])
+        vec = rs.VectorScale(vec, self.length*self.scale*scaleW/2)
+        pt2 = rs.VectorAdd(self.eP, vec)
+        pts.append(pt2)
+        # pt3
+        pt3 = rs.VectorAdd(self.eP, -vec)
+        pts.append(pt3)
+        return pts
+
+    def drawSrf(self):
+        guids = []
+        if(len(self.children)==0):
+            newPts = []
+            myPts = self.getSrfPts(1)
+            newPts.append(myPts[0])
+            newPts.append(myPts[1])
+            newPts.append(myPts[2])
+            newPts.append(myPts[3])
+            newPts.append(myPts[0])
+            guid = rs.AddPolyline(newPts)
+            guid = rs.AddPlanarSrf(guid)
+            guids.extend(guid)
+        else:
+            newPts = []
+            myPts = self.getSrfPts(1)
+            childrenRPts = self.children[0].getSrfPts(0)
+            childrenLPts = self.children[1].getSrfPts(0)
+            # pt0
+            newPts.append(myPts[0])
+            # pt1
+            newPts.append(myPts[1])
+            # pt2
+            line0 = rs.AddLine(myPts[1], myPts[2])
+            line1 = rs.AddLine(childrenRPts[1], childrenRPts[2])
+            intersectPts = rs.LineLineIntersection(line0, line1)
+            newPts.append(intersectPts[0])
+            # pt3
+            newPts.append(childrenRPts[2])
+            # pt4
+            newPts.append(childrenRPts[3])
+            # pt5
+            line0 = rs.AddLine(childrenRPts[3], childrenRPts[0])
+            line1 = rs.AddLine(childrenLPts[3], childrenLPts[0])
+            intersectPts = rs.LineLineIntersection(line0, line1)
+            newPts.append(intersectPts[0])
+            # pt6
+            newPts.append(childrenLPts[3])
+            # pt7
+            newPts.append(childrenLPts[2])
+            # pt8
+            line0 = rs.AddLine(myPts[0], myPts[3])
+            line1 = rs.AddLine(childrenLPts[2], childrenLPts[1])
+            intersectPts = rs.LineLineIntersection(line0, line1)
+            newPts.append(intersectPts[0])
+            # pt9
+            newPts.append(myPts[0])
+            # guid
+            guid = rs.AddPolyline(newPts)
+            guid = rs.AddPlanarSrf(guid)
+            guids.extend(guid)
+        if(self.n == 0):
+            newPts = []
+            myPts = self.getSrfPts(0)
+            childrenRPts = self.children[0].getSrfPts(1)
+            childrenLPts = self.children[1].getSrfPts(1)
+            newPts.append(myPts[0])
+            newPts.append(myPts[1])
+            newPts.append(childrenRPts[0])
+            newPts.append(childrenLPts[0])
+            newPts.append(myPts[0])
+            guid = rs.AddPolyline(newPts)
+            guid = rs.AddPlanarSrf(guid)
+            guids.extend(guid)
+        # return
+        return guids
             
                 
                 
@@ -128,16 +217,12 @@ class Tree(object):
     def __init__(self, maxN, angleXZGene):
         self.maxN = maxN
         self.angleXZGene = angleXZGene
-        self.angleXYGene = 90
-        self.scaleGene = 0.9
+        self.minXZAngle = 5
+        self.maxXZAngle = 75
+        self.angleXY = 90
+        self.scale = 0.8
         self.branches = []
-        self.minScale = 0.8
-        self.maxScale = 1.0
-        self.minXZAngle = 0
-        self.maxXZAngle = 45
-        self.minXYAngle = 0
-        self.maxXYAngle = 90
-        
+
         # parent
         parentEP = [0,0,0]
         parentLength = 2000
@@ -179,8 +264,8 @@ class Tree(object):
         parentLength = branch.length
         parentAxises = branch.axis.axises
         angleXZ = (self.maxXZAngle-self.minXZAngle)*self.angleXZGene[no]+self.minXZAngle
-        angleXY = 90
-        scale = 0.9
+        angleXY = self.angleXY
+        scale = self.scale
         leftBranch = Branch(
             self.maxN,
             n,
@@ -193,6 +278,7 @@ class Tree(object):
             scale
         )
         self.branches.append(leftBranch)
+        branch.children.append(leftBranch)
         no = self.makeChildBranch(leftBranch, n+1, no+1)
                 
         # right branch
@@ -200,8 +286,8 @@ class Tree(object):
         parentLength = branch.length
         parentAxises = branch.axis.axises
         angleXZ = (self.maxXZAngle-self.minXZAngle)*self.angleXZGene[no]+self.minXZAngle
-        angleXY = -90
-        scale = 0.9
+        angleXY = -self.angleXY
+        scale = self.scale
         rightbranch = Branch(
             self.maxN,
             n,
@@ -214,6 +300,7 @@ class Tree(object):
             scale
         )
         self.branches.append(rightbranch)
+        branch.children.append(rightbranch)
         no = self.makeChildBranch(rightbranch, n+1, no+1)
                 
         return no
@@ -226,20 +313,24 @@ tree = Tree(maxN,angleXZGene)
 ##############################################
 # draw
 ##############################################
+allAxis = []
 allBranch = []
 allText = []
 allNoPt = []
 allLeaf = []
+allBranchSrf = []
+allBranchUnrollSrf = []
 rs.EnableRedraw(False)
 for branch in tree.branches: 
-#     # axis
-#    guids = branch.axis.draw()
-#    allGuids.extend(guids)
+    # axis
+    # guids = branch.axis.draw()
+    # allAxis.extend(guids)
     
     # text
-    no = branch.no
-    n = branch.n
-    str = "n = {}\nno = {}".format(n,no)
+    str = "n = {}\n".format(branch.n)
+    str += "no = {}\n".format(branch.no)
+    str += "angleXZ = {}\n".format(branch.angleXZ)
+    str += "angleXY = {}\n".format(branch.angleXY)
     allText.append(str)
     noPt = rs.VectorAdd(branch.sP, branch.eP)
     noPt = rs.VectorScale(noPt,0.5)
@@ -253,5 +344,11 @@ for branch in tree.branches:
     guid = branch.drawLeaf()
     if(guid!=None):
         allLeaf.append(guid)
+    
+    # srf
+    guid = branch.drawSrf()
+    if(guid!=None):
+        allBranchSrf.extend(guid)
+        
 rs.EnableRedraw(True)
         
