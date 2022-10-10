@@ -86,6 +86,9 @@ class Branch(object):
         self.length = []
         self.axis = None
         
+        self.scaleW = 0.2
+        self.srfThickness = 30
+
         self.setAxis()
         self.setBranch()
             
@@ -122,10 +125,9 @@ class Branch(object):
     
     def getSrfPts(self, axisNo):
         pts = []
-        scaleW = 0.2
         # pt0
         vec = rs.VectorUnitize(self.axis.axises[axisNo])
-        vec = rs.VectorScale(vec, self.length*scaleW/2)
+        vec = rs.VectorScale(vec, self.length*self.scaleW/2)
         pt0 = rs.VectorAdd(self.sP, -vec)
         pts.append(pt0)
         # pt1
@@ -133,7 +135,7 @@ class Branch(object):
         pts.append(pt1)
         # pt2
         vec = rs.VectorUnitize(self.axis.axises[axisNo])
-        vec = rs.VectorScale(vec, self.length*self.scale*scaleW/2)
+        vec = rs.VectorScale(vec, self.length*self.scale*self.scaleW/2)
         pt2 = rs.VectorAdd(self.eP, vec)
         pts.append(pt2)
         # pt3
@@ -161,6 +163,34 @@ class Branch(object):
             childrenLPts = self.children[1].getSrfPts(0)
             # pt0
             newPts.append(myPts[0])
+            # 相欠き0
+            vec = rs.VectorSubtract(self.sP, myPts[0])
+            vec = rs.VectorUnitize(vec)
+            l = (self.length*self.scaleW - self.srfThickness)/2.0
+            vec = rs.VectorScale(vec, l)
+            pt = rs.VectorAdd(myPts[0], vec)
+            newPts.append(pt)
+            # 相欠き1
+            vec = rs.VectorSubtract(self.eP, self.sP)
+            vec = rs.VectorUnitize(vec)
+            l = self.length/2.0
+            vec = rs.VectorScale(vec, l)
+            pt = rs.VectorAdd(pt, vec)
+            newPts.append(pt)
+            # 相欠き2
+            vec = rs.VectorSubtract(self.sP, myPts[0])
+            vec = rs.VectorUnitize(vec)
+            l = self.srfThickness
+            vec = rs.VectorScale(vec, l)
+            pt = rs.VectorAdd(pt, vec)
+            newPts.append(pt)
+            # 相欠き3
+            vec = rs.VectorSubtract(self.sP, self.eP)
+            vec = rs.VectorUnitize(vec)
+            l = self.length/2.0
+            vec = rs.VectorScale(vec, l)
+            pt = rs.VectorAdd(pt, vec)
+            newPts.append(pt)
             # pt1
             newPts.append(myPts[1])
             # pt2
@@ -170,6 +200,34 @@ class Branch(object):
             newPts.append(intersectPts[0])
             # pt3
             newPts.append(childrenRPts[2])
+            # 相欠き0
+            vec = rs.VectorSubtract(childrenRPts[3], childrenRPts[2])
+            vec = rs.VectorUnitize(vec)
+            l = (self.children[0].length*self.children[0].scale*self.children[0].scaleW - self.children[0].srfThickness)/2.0
+            vec = rs.VectorScale(vec, l)
+            pt = rs.VectorAdd(childrenRPts[2], vec)
+            newPts.append(pt)
+            # 相欠き1
+            vec = rs.VectorSubtract(self.children[0].sP, self.children[0].eP)
+            vec = rs.VectorUnitize(vec)
+            l = self.children[0].length/2.0
+            vec = rs.VectorScale(vec, l)
+            pt = rs.VectorAdd(pt, vec)
+            newPts.append(pt)
+            # 相欠き2
+            vec = rs.VectorSubtract(childrenRPts[3], childrenRPts[2])
+            vec = rs.VectorUnitize(vec)
+            l = self.srfThickness
+            vec = rs.VectorScale(vec, l)
+            pt = rs.VectorAdd(pt, vec)
+            newPts.append(pt)
+            # 相欠き3
+            vec = rs.VectorSubtract(self.children[0].eP, self.children[0].sP)
+            vec = rs.VectorUnitize(vec)
+            l = self.children[0].length/2.0
+            vec = rs.VectorScale(vec, l)
+            pt = rs.VectorAdd(pt, vec)
+            newPts.append(pt)
             # pt4
             newPts.append(childrenRPts[3])
             # pt5
@@ -179,6 +237,34 @@ class Branch(object):
             newPts.append(intersectPts[0])
             # pt6
             newPts.append(childrenLPts[3])
+            # 相欠き0
+            vec = rs.VectorSubtract(childrenLPts[2], childrenLPts[3])
+            vec = rs.VectorUnitize(vec)
+            l = (self.children[1].length * self.children[1].scale * self.children[1].scaleW - self.children[1].srfThickness)/2.0
+            vec = rs.VectorScale(vec, l)
+            pt = rs.VectorAdd(childrenLPts[3], vec)
+            newPts.append(pt)
+            # 相欠き1
+            vec = rs.VectorSubtract(self.children[1].sP, self.children[1].eP)
+            vec = rs.VectorUnitize(vec)
+            l = self.children[1].length/2.0
+            vec = rs.VectorScale(vec, l)
+            pt = rs.VectorAdd(pt, vec)
+            newPts.append(pt)
+            # 相欠き2
+            vec = rs.VectorSubtract(childrenLPts[2], childrenLPts[3])
+            vec = rs.VectorUnitize(vec)
+            l = self.srfThickness
+            vec = rs.VectorScale(vec, l)
+            pt = rs.VectorAdd(pt, vec)
+            newPts.append(pt)
+            # 相欠き3
+            vec = rs.VectorSubtract(self.children[1].eP, self.children[1].sP)
+            vec = rs.VectorUnitize(vec)
+            l = self.children[1].length/2.0
+            vec = rs.VectorScale(vec, l)
+            pt = rs.VectorAdd(pt, vec)
+            newPts.append(pt)
             # pt7
             newPts.append(childrenLPts[2])
             # pt8
