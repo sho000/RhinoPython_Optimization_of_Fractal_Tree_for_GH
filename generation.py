@@ -148,11 +148,45 @@ class Branch(object):
         if(len(self.children)==0):
             newPts = []
             myPts = self.getSrfPts(1)
+            # pt0
             newPts.append(myPts[0])
+            # 相欠き0
+            vec = rs.VectorSubtract(self.sP, myPts[0])
+            vec = rs.VectorUnitize(vec)
+            l = (self.length*self.scaleW - self.srfThickness)/2.0
+            vec = rs.VectorScale(vec, l)
+            pt = rs.VectorAdd(myPts[0], vec)
+            newPts.append(pt)
+            # 相欠き1
+            vec = rs.VectorSubtract(self.eP, self.sP)
+            vec = rs.VectorUnitize(vec)
+            l = self.length/2.0
+            vec = rs.VectorScale(vec, l)
+            pt = rs.VectorAdd(pt, vec)
+            newPts.append(pt)
+            # 相欠き2
+            vec = rs.VectorSubtract(self.sP, myPts[0])
+            vec = rs.VectorUnitize(vec)
+            l = self.srfThickness
+            vec = rs.VectorScale(vec, l)
+            pt = rs.VectorAdd(pt, vec)
+            newPts.append(pt)
+            # 相欠き3
+            vec = rs.VectorSubtract(self.sP, self.eP)
+            vec = rs.VectorUnitize(vec)
+            l = self.length/2.0
+            vec = rs.VectorScale(vec, l)
+            pt = rs.VectorAdd(pt, vec)
+            newPts.append(pt)
+            # pt1
             newPts.append(myPts[1])
+            # pt2
             newPts.append(myPts[2])
+            # pt3
             newPts.append(myPts[3])
+            # pt4
             newPts.append(myPts[0])
+            # guid
             guid = rs.AddPolyline(newPts)
             guid = rs.AddPlanarSrf(guid)
             guids.extend(guid)
@@ -283,10 +317,43 @@ class Branch(object):
             myPts = self.getSrfPts(0)
             childrenRPts = self.children[0].getSrfPts(1)
             childrenLPts = self.children[1].getSrfPts(1)
+            # pt0
             newPts.append(myPts[0])
+            # pt1
             newPts.append(myPts[1])
+            # pt2
             newPts.append(childrenRPts[0])
+            # 相欠き0
+            vec = rs.VectorSubtract(childrenLPts[0], childrenRPts[0])
+            vec = rs.VectorUnitize(vec)
+            l = (self.children[0].length*self.children[0].scaleW - self.children[0].srfThickness)/2.0
+            vec = rs.VectorScale(vec, l)
+            pt = rs.VectorAdd(childrenRPts[0], vec)
+            newPts.append(pt)
+            # 相欠き1
+            vec = rs.VectorSubtract(self.sP, self.eP)
+            vec = rs.VectorUnitize(vec)
+            l = self.length/2.0
+            vec = rs.VectorScale(vec, l)
+            pt = rs.VectorAdd(pt, vec)
+            newPts.append(pt)
+            # 相欠き2
+            vec = rs.VectorSubtract(childrenLPts[0], childrenRPts[0])
+            vec = rs.VectorUnitize(vec)
+            l = self.srfThickness
+            vec = rs.VectorScale(vec, l)
+            pt = rs.VectorAdd(pt, vec)
+            newPts.append(pt)
+            # 相欠き3
+            vec = rs.VectorSubtract(self.eP, self.sP)
+            vec = rs.VectorUnitize(vec)
+            l = self.length/2.0
+            vec = rs.VectorScale(vec, l)
+            pt = rs.VectorAdd(pt, vec)
+            newPts.append(pt)
+            # pt3
             newPts.append(childrenLPts[0])
+            # pt4
             newPts.append(myPts[0])
             guid = rs.AddPolyline(newPts)
             guid = rs.AddPlanarSrf(guid)
