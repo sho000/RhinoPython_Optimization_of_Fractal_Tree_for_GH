@@ -186,17 +186,30 @@ class Branch(object):
             newPts.append(myPts[3])
             # pt4
             newPts.append(myPts[0])
-            # guid
+            # srf
             guid = rs.AddPolyline(newPts)
             guid = rs.AddPlanarSrf(guid)
-            guids.extend(guid)
+
+            # extrudeSrf
+            vec = self.axis.axises[0]
+            vec = rs.VectorUnitize(vec)
+            vec = rs.VectorScale(vec, self.srfThickness/2.0)
+            sp = rs.VectorAdd(self.sP, -vec)
+            ep = rs.VectorAdd(self.sP, vec)
+            path = rs.AddLine(sp,ep)
+            guid = rs.ExtrudeSurface(guid, path, cap=True)
+            guid = rs.MoveObject(guid, -vec)
+            guids.append(guid)
         else:
+            newCrvs = []
             newPts = []
             myPts = self.getSrfPts(1)
             childrenRPts = self.children[0].getSrfPts(0)
             childrenLPts = self.children[1].getSrfPts(0)
+
             # pt0
-            newPts.append(myPts[0])
+            pt0 = myPts[0]
+            newPts.append(pt0)
             # 相欠き0
             vec = rs.VectorSubtract(self.sP, myPts[0])
             vec = rs.VectorUnitize(vec)
@@ -226,14 +239,35 @@ class Branch(object):
             pt = rs.VectorAdd(pt, vec)
             newPts.append(pt)
             # pt1
-            newPts.append(myPts[1])
+            pt1 = myPts[1]
+            newPts.append(pt1)
+            # crv0
+            guid = rs.AddPolyline(newPts)
+            newCrvs.append(guid)
+
+            # pt1
+            newPts = []
+            pt1 = myPts[1]
+            newPts.append(pt1)
             # pt2
             line0 = rs.AddLine(myPts[1], myPts[2])
             line1 = rs.AddLine(childrenRPts[1], childrenRPts[2])
             intersectPts = rs.LineLineIntersection(line0, line1)
-            newPts.append(intersectPts[0])
+            pt2 = intersectPts[0]
+            newPts.append(pt2)
             # pt3
-            newPts.append(childrenRPts[2])
+            pt3 = childrenRPts[2]
+            newPts.append(pt3)
+            # crv1
+            guid = rs.AddNurbsCurve(newPts, knots=[0,0,1,1], degree=2, weights=[1,5,1])
+            # guid = rs.AddCurve(newPts, degree=3)
+            # guid = rs.AddInterpCurve(newPts, degree=3, knotstyle=1, start_tangent=rs.VectorSubtract(pt2,pt1), end_tangent=rs.VectorSubtract(pt3,pt2))
+            newCrvs.append(guid)
+
+            # pt3
+            newPts = []
+            pt3 = childrenRPts[2]
+            newPts.append(pt3)
             # 相欠き0
             vec = rs.VectorSubtract(childrenRPts[3], childrenRPts[2])
             vec = rs.VectorUnitize(vec)
@@ -263,14 +297,34 @@ class Branch(object):
             pt = rs.VectorAdd(pt, vec)
             newPts.append(pt)
             # pt4
-            newPts.append(childrenRPts[3])
+            pt4 = childrenRPts[3]
+            newPts.append(pt4)
+            # crv2
+            guid = rs.AddPolyline(newPts)
+            newCrvs.append(guid)
+
+            # pt4
+            newPts = []
+            pt4 = childrenRPts[3]
+            newPts.append(pt4)
             # pt5
             line0 = rs.AddLine(childrenRPts[3], childrenRPts[0])
             line1 = rs.AddLine(childrenLPts[3], childrenLPts[0])
             intersectPts = rs.LineLineIntersection(line0, line1)
-            newPts.append(intersectPts[0])
+            pt5 = intersectPts[0]
+            newPts.append(pt5)
             # pt6
-            newPts.append(childrenLPts[3])
+            pt6 = childrenLPts[3]
+            newPts.append(pt6)
+            # crv3
+            guid = rs.AddNurbsCurve(newPts, knots=[0,0,1,1], degree=2, weights=[1,5,1])
+            # guid = rs.AddInterpCurve(newPts, degree=3, knotstyle=1, start_tangent=rs.VectorSubtract(pt5,pt4), end_tangent=rs.VectorSubtract(pt6,pt5))
+            newCrvs.append(guid)
+
+            # pt6
+            newPts = []
+            pt6 = childrenLPts[3]
+            newPts.append(pt6)
             # 相欠き0
             vec = rs.VectorSubtract(childrenLPts[2], childrenLPts[3])
             vec = rs.VectorUnitize(vec)
@@ -300,18 +354,45 @@ class Branch(object):
             pt = rs.VectorAdd(pt, vec)
             newPts.append(pt)
             # pt7
-            newPts.append(childrenLPts[2])
+            pt7 = childrenLPts[2]
+            newPts.append(pt7)
+            # crv4
+            guid = rs.AddPolyline(newPts)
+            newCrvs.append(guid)
+
+            # pt7
+            newPts = []
+            pt7 = childrenLPts[2]
+            newPts.append(pt7)
             # pt8
             line0 = rs.AddLine(myPts[0], myPts[3])
             line1 = rs.AddLine(childrenLPts[2], childrenLPts[1])
             intersectPts = rs.LineLineIntersection(line0, line1)
-            newPts.append(intersectPts[0])
+            pt8 = intersectPts[0]
+            newPts.append(pt8)
             # pt9
-            newPts.append(myPts[0])
-            # guid
-            guid = rs.AddPolyline(newPts)
+            pt9 = myPts[0]
+            newPts.append(pt9)
+            # crv5
+            guid = rs.AddNurbsCurve(newPts, knots=[0,0,1,1], degree=2, weights=[1,5,1])
+            # guid = rs.AddInterpCurve(newPts, degree=3, knotstyle=1, start_tangent=rs.VectorSubtract(pt8,pt7), end_tangent=rs.VectorSubtract(pt9,pt8))
+            newCrvs.append(guid)
+
+            # srf
+            guid = rs.JoinCurves(newCrvs, delete_input=False, tolerance=None)
             guid = rs.AddPlanarSrf(guid)
-            guids.extend(guid)
+
+            # extrudeSrf
+            vec = self.axis.axises[0]
+            vec = rs.VectorUnitize(vec)
+            vec = rs.VectorScale(vec, self.srfThickness/2)
+            sp = rs.VectorAdd(self.sP, -vec)
+            ep = rs.VectorAdd(self.sP, vec)
+            path = rs.AddLine(sp,ep)
+            guid = rs.ExtrudeSurface(guid, path, cap=True)
+            guid = rs.MoveObject(guid, -vec)
+            guids.append(guid)
+
         if(self.n == 0):
             newPts = []
             myPts = self.getSrfPts(0)
@@ -355,9 +436,21 @@ class Branch(object):
             newPts.append(childrenLPts[0])
             # pt4
             newPts.append(myPts[0])
+
+            # srf
             guid = rs.AddPolyline(newPts)
             guid = rs.AddPlanarSrf(guid)
-            guids.extend(guid)
+
+            # extrudeSrf
+            vec = self.axis.axises[1]
+            vec = rs.VectorUnitize(vec)
+            vec = rs.VectorScale(vec, self.srfThickness/2.0)
+            sp = rs.VectorAdd(self.sP, -vec)
+            ep = rs.VectorAdd(self.sP, vec)
+            path = rs.AddLine(sp,ep)
+            guid = rs.ExtrudeSurface(guid, path, cap=True)
+            guid = rs.MoveObject(guid, -vec)
+            guids.append(guid)
         # return
         return guids
             
